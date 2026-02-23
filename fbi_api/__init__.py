@@ -1,13 +1,5 @@
 """
 FBI API - Python client for the FBI Wanted Persons API.
-
-Usage:
-    from fbi_api import FBIClient
-
-    client = FBIClient()
-    results = client.search_wanted()
-    for person in results.items:
-        print(person.title)
 """
 
 from .client import FBIClient
