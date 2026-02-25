@@ -10,6 +10,12 @@ class AbstractReferee:
     def __str__(self):
         return f"Arbitre : \n    Nom :{self.name},\n Prénom : {self.surname}"
     
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'surname': self.surname
+        }
+    
 class Referee(AbstractReferee):
 
     def __init__(self, name: str, surname: str):

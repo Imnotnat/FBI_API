@@ -4,9 +4,9 @@ import re
 from datetime import date
 from typing import Any, Dict, List, Optional
 from playwright.sync_api import sync_playwright, TimeoutError
-from fbi_api.game import _extract_data_from_pdf
+from fbi_api.utils.pdfExtractor import _extract_data_from_pdf
 
-from fbi_api.utils import _format_date_for_input
+from fbi_api.utils.utils import _format_date_for_input
 
 logger = logging.getLogger(__name__)
 
@@ -397,8 +397,8 @@ class BrowserDownload(Browser):
             # Parsing du fichier téléchargé
             match_data = _extract_data_from_pdf(pdf_path)
 
-            if match_data and not match_data.get('external_id'):
-                match_data['external_id'] = f"FBI_PDF_ROW_{index}_{date.today()}"
+            if match_data and not hasattr(match_data, 'unique_id'):
+                match_data.unique_id = f"FBI_PDF_ROW_{index}_{date.today()}"
 
             return match_data
 

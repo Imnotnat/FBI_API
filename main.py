@@ -1,4 +1,5 @@
 from fbi_api.user import FBI_User
+from fbi_api.utils.jsonManager import saveGamesToJson
 
 
 def main():
@@ -6,8 +7,10 @@ def main():
     print("Authenticate :", user.is_authenticated)
     user.authenticate()
     print("Authenticate :", user.is_authenticated)
-    user.generateGames("2025-12-31")
+    user.generateGames("2026-2-28","2026-2-28")
     print("Games :", user.games)
+
+    saveGamesToJson(user.games, "export/games.json")
 
 
 if __name__ == "__main__":
