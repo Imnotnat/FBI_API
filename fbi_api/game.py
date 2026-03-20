@@ -38,6 +38,7 @@ class Game :
             # This is a placeholder - adjust based on your AbstractReferee class
             ref = AbstractReferee(**ref_data)
             self.refs[ref] = details
+        self.otms = []
         self.unique_id = data.get('unique_id', f"{self.game_id}_{self.date}")
 
     def to_dict(self) -> Dict[str, Any]:
@@ -50,6 +51,7 @@ class Game :
             'competition_level': self.competition_level,
             'venue': self.venue,
             'refs': [{**ref.to_dict(), 'details': details} for ref, details in self.refs.items()],
+            'otms': [otm.to_dict() for otm in self.otms],
             'unique_id': self.unique_id
         }
     
@@ -66,4 +68,6 @@ class Game :
         "\nDate : " + str(self.date) + \
         "\nHeure : " + str(self.time) + \
         "\nSalle : " + self.venue + \
-        "\nArbitres : " + ",\n ".join([str(ref) for ref in self.refs.keys()])
+        "\nArbitres : " + ",\n ".join([str(ref) for ref in self.refs.keys()]) + \
+        "\nOTMs : " + ",\n ".join([str(otm) for otm in self.otms]) + \
+        "\n---------------------------------------------\n"

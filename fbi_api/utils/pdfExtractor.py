@@ -3,6 +3,7 @@ from typing import Any, Dict, Optional
 import pdfplumber
 from fbi_api.game import Game
 from datetime import datetime
+from fbi_api.otm import AbstractOTM, OTMType
 from fbi_api.referee import AbstractReferee
 
 def _extract_data_from_pdf(pdf_path: str) -> Optional[Dict[str, Any]]:
@@ -92,6 +93,26 @@ def _extract_data_from_pdf(pdf_path: str) -> Optional[Dict[str, Any]]:
                 'pay': float(clean_indem[2]) if len(clean_indem) > 2 else 0.0,
                 'km': float(clean_km[2]) if len(clean_km) > 2 else 0.0
             }
+
+        #OTM
+        if not hasattr(game, 'otms'):
+            game.otms = []
+
+        marquer = re.search(r"Marqueur\s*:\s*([^\(]+)", text)
+        if marquer:
+            marquer_name = marquer.group(1).strip().split(" ", 1)
+            if len(marquer_name) == 2:
+                game.otms.append(AbstractOTM(marquer_name[0], marquer_name[1], OTMType.Marquer))
+        chronometreur = re.search(r"Chronometreur\s*:\s*([^\(]+)", text)
+        if chronometreur:
+            chrono_name = chronometreur.group(1).strip().split(" ", 1)
+            if len(chrono_name) == 2:
+                game.otms.append(AbstractOTM(chrono_name[0], chrono_name[1], OTMType.Chronometer))
+        chrono24s = re.search(r"Chronométreur tirs\s*:\s*([^\(]+)", text)
+        if chrono24s:
+            chrono24s_name = chrono24s.group(1).strip().split(" ", 1)
+            if len(chrono24s_name) == 2:
+                game.otms.append(AbstractOTM(chrono24s_name[0], chrono24s_name[1], OTMType.Chronometer24s))
 
         # Validation minimale et LOG VISUEL
         if game.date and game.home_team:
