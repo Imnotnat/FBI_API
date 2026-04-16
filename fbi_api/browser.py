@@ -5,6 +5,7 @@ from datetime import date
 from typing import Any, Dict, List, Optional
 from playwright.sync_api import sync_playwright, TimeoutError
 from fbi_api.utils.pdfExtractor import _extract_data_from_pdf
+from playwright_stealth import Stealth
 
 from fbi_api.utils.utils import _format_date_for_input
 
@@ -31,19 +32,41 @@ class Browser:
         self.page = None
 
     def start_browser(self):
-        """Start the Playwright browser"""
+        """Start the Playwright browser with maximum stealth (v2.0+)"""
         try:
             self.playwright = sync_playwright().start()
+            
+            # Arguments ultra-robustes pour masquer l'automatisation
             self.browser = self.playwright.chromium.launch(
-                headless=self.headless
+                headless=self.headless,
+                args=[
+                    "--disable-blink-features=AutomationControlled",
+                    "--disable-features=IsolateOrigins,site-per-process", # Aide parfois pour les iframes/captchas
+                    "--disable-infobars",
+                    "--no-sandbox",
+                    "--window-size=1920,1080"
+                ]
             )
-            context = self.browser.new_context()
+            
+            # Configuration d'un contexte très réaliste (Français, Paris)
+            context = self.browser.new_context(
+                viewport={"width": 1920, "height": 1080},
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                locale="fr-FR",
+                timezone_id="Europe/Paris",
+                color_scheme="light" # Définit le thème clair standard
+            )
+            
+            # 🔴 Application de Playwright-Stealth v2.0+ sur le CONTEXTE
+            stealth = Stealth()
+            stealth.apply_stealth_sync(context)
+            
             self.page = context.new_page()
-            logger.info("FBI scraper browser started")
+            logger.info("FBI scraper browser started in Stealth mode")
         except Exception as e:
             logger.error(f"Failed to start browser: {e}")
             raise
-    
+
     def close_browser(self):
         """Close the browser and cleanup."""
         if self.browser:
@@ -70,6 +93,18 @@ class Browser:
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit - closes the browser."""
         self.close_browser()
+
+    def goto(self, url):
+        if not self.page:
+            logger.error("Browser not initialized")
+            return False
+        try:
+            self.page.goto(url, timeout=NAVIGATION_TIMEOUT)
+            logger.debug(f"Navigated to {url}")
+            return True
+        except TimeoutError:
+            logger.error(f"Navigation to {url} timed out")
+            return False
 
     def login(self,user) -> bool:
         """
@@ -138,6 +173,8 @@ class Browser:
             logger.info("FBI login successful")
             return True
         except TimeoutError as e:
+            if self.page:
+                self.page.screenshot(path="erreur_cloudflare.png")
             logger.error(f"Timeout during login: {e}")
             return False
         except Exception as e:
@@ -149,19 +186,38 @@ BrowserDownload extends Browser to add specific methods for navigating the FBI d
 """
 class BrowserDownload(Browser):
 
-    def start_browserDownload(self):
-        """Start the Playwright browser with download capabilities."""
+    def start_browser(self):
+        """Start the Playwright browser with maximum stealth (v2.0+)"""
         try:
             self.playwright = sync_playwright().start()
-            # On configure le dossier de téléchargement temporaire
+            
+            # Arguments ultra-robustes pour masquer l'automatisation
             self.browser = self.playwright.chromium.launch(
                 headless=self.headless,
-                downloads_path="./temp_downloads"
+                args=[
+                    "--disable-blink-features=AutomationControlled",
+                    "--disable-features=IsolateOrigins,site-per-process", # Aide parfois pour les iframes/captchas
+                    "--disable-infobars",
+                    "--no-sandbox",
+                    "--window-size=1920,1080"
+                ]
             )
-            # Important : accept_downloads=True
-            context = self.browser.new_context(accept_downloads=True)
+            
+            # Configuration d'un contexte très réaliste (Français, Paris)
+            context = self.browser.new_context(
+                viewport={"width": 1920, "height": 1080},
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                locale="fr-FR",
+                timezone_id="Europe/Paris",
+                color_scheme="light" # Définit le thème clair standard
+            )
+            
+            # 🔴 Application de Playwright-Stealth v2.0+ sur le CONTEXTE
+            stealth = Stealth()
+            stealth.apply_stealth_sync(context)
+            
             self.page = context.new_page()
-            logger.info("FBI scraper browser started")
+            logger.info("FBI scraper browser started in Stealth mode")
         except Exception as e:
             logger.error(f"Failed to start browser: {e}")
             raise

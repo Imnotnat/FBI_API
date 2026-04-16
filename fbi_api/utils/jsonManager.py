@@ -36,4 +36,4 @@ def loadGamesFromJson(file_path: str) -> list[Game]:
     """
     with open(file_path, 'r', encoding='utf-8') as json_file:
         games = json.load(json_file)
-    return [Game.from_dict(game_dict) for game_dict in games]
+    return [Game.from_dict(data=game_dict) for game_dict in games]

@@ -1,7 +1,9 @@
 from typing import Dict, Any
 
 from dataclasses import dataclass, field
+from fbi_api.otm import AbstractOTM
 from fbi_api.referee import AbstractReferee
+from datetime import datetime
 
 
 @dataclass
@@ -25,6 +27,8 @@ class Game :
     def load_from_json(self, data: Dict[str, Any]):
         self.game_id = data.get('game_id')
         self.date = data.get('date')
+        if isinstance(self.date, str):
+            self.date = datetime.strptime(self.date, '%Y-%m-%d').date()
         self.time = data.get('time')
         self.home_team = data.get('home_team')
         self.away_team = data.get('away_team')
@@ -38,7 +42,8 @@ class Game :
             # This is a placeholder - adjust based on your AbstractReferee class
             ref = AbstractReferee(**ref_data)
             self.refs[ref] = details
-        self.otms = []
+        self.otms = data.get('otms', [])
+        self.otms = [AbstractOTM(**otm_data) for otm_data in data.get('otms', [])]
         self.unique_id = data.get('unique_id', f"{self.game_id}_{self.date}")
 
     def to_dict(self) -> Dict[str, Any]:
@@ -55,6 +60,7 @@ class Game :
             'unique_id': self.unique_id
         }
     
+    @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Game':
         game = cls()
         game.load_from_json(data)
@@ -70,4 +76,5 @@ class Game :
         "\nSalle : " + self.venue + \
         "\nArbitres : " + ",\n ".join([str(ref) for ref in self.refs.keys()]) + \
         "\nOTMs : " + ",\n ".join([str(otm) for otm in self.otms]) + \
-        "\n---------------------------------------------\n"
+        "\n---------------------------------------------\n"  
+    

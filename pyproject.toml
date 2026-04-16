@@ -8,11 +8,14 @@ version = "0.1.1"
 description = "Python client for the FBI Wanted Persons public API"
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "MIT" }
+# 1. CORRECTION ICI : Format de licence simplifié (enlève le warning)
+license = "MIT" 
 keywords = ["fbi", "api", "wanted", "client"]
 dependencies = [
     "requests>=2.28",
-    "pdfplumber>=0.10"
+    "pdfplumber>=0.10",
+    "playwright>=1.40.0",
+    "playwright-stealth>=2.0.0"
 ]
 
 [project.optional-dependencies]
@@ -29,3 +32,8 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 target-version = "py39"
+
+# 2. CORRECTION ICI : On dit explicitement quel dossier empaqueter
+[tool.setuptools.packages.find]
+include = ["fbi_api", "fbi_api.*"]
+exclude = ["export", "export.*", "tests"]
