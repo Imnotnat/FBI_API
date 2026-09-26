@@ -6,6 +6,26 @@ from datetime import datetime
 from fbi_api.otm import AbstractOTM, OTMType
 from fbi_api.referee import AbstractReferee
 
+def _extract_venue(text: str) -> Optional[str]:
+    """
+    Extract the full venue address from the PDF text.
+
+    The line looks like:
+    "Adresse de la salle :SALLE OMNISPORTS 67 Av. de Provence 06130 GRASSE (Tél:0493401849)"
+    The phone part may be missing or truncated (e.g. "(Tél:06").
+    """
+    venue_match = re.search(r"Adresse de la salle\s*:\s*([^\n]+)", text)
+    if venue_match:
+        venue = re.sub(r"\s*\(T[ée]l\b.*$", "", venue_match.group(1)).strip()
+        if venue:
+            return venue
+
+    zip_match = re.search(r"\b\d{5}[ \t]+[A-Z][A-Z\- \t]{2,}\b", text)
+    if zip_match:
+        return zip_match.group(0).strip()
+    return None
+
+
 def _extract_data_from_pdf(pdf_path: str) -> Optional[Dict[str, Any]]:
     """
     Extract match data from PDF using regex on the text content.
@@ -55,15 +75,8 @@ def _extract_data_from_pdf(pdf_path: str) -> Optional[Dict[str, Any]]:
         if away_match:
             game.away_team = away_match.group(1).strip().replace(" - ", " ").strip()
 
-        #TODO
         # 4. Salle (Venue)
-        venue_match = re.search(r"Adresse de la salle.*?(?:\n.*?)*?(\d{5}\s+[A-Z\-\s]+)", text, re.DOTALL)
-        if venue_match:
-            game.venue = venue_match.group(1).strip()
-        else:
-            zip_match = re.search(r"\b\d{5}\s+[A-Z\-\s]{3,}\b", text)
-            if zip_match:
-                game.venue = zip_match.group(0).strip()
+        game.venue = _extract_venue(text)
 
         # 5. Arbitres
         refs = re.findall(r"Arbitre\s*:\s*([^\(]+)", text)
