@@ -26,6 +26,23 @@ def _extract_venue(text: str) -> Optional[str]:
     return None
 
 
+def _extract_payer(text: str) -> Optional[str]:
+    """
+    Extract who pays the referees.
+
+    The line looks like:
+    "C. Arbitre INDEMNISES PAR : LA FEDERATION"
+    The referees' line is preferred; any other "INDEMNISES PAR" line is a fallback.
+    The capture stops at a following "X. ..." section that pdfplumber may glue on the same line.
+    """
+    matches = re.findall(r"(Arbitres?)?[ \t]*INDEMNIS[EÉ]E?S?[ \t]+PAR[ \t]*:[ \t]*([^\n]+)", text, re.IGNORECASE)
+    if not matches:
+        return None
+    raw = next((value for label, value in matches if label), matches[0][1])
+    payer = re.split(r"\s+[A-Z]\.\s|\s+\S+\s+INDEMNIS", raw, maxsplit=1)[0].strip(" :-")
+    return payer or None
+
+
 def _extract_data_from_pdf(pdf_path: str) -> Optional[Dict[str, Any]]:
     """
     Extract match data from PDF using regex on the text content.
@@ -77,6 +94,9 @@ def _extract_data_from_pdf(pdf_path: str) -> Optional[Dict[str, Any]]:
 
         # 4. Salle (Venue)
         game.venue = _extract_venue(text)
+
+        # 5 bis. Payeur des arbitres (« INDEMNISES PAR : ... »)
+        game.payer = _extract_payer(text)
 
         # 5. Arbitres
         refs = re.findall(r"Arbitre\s*:\s*([^\(]+)", text)

@@ -15,6 +15,8 @@ class Game :
     away_team: str = None
     competition_level: str = None
     venue: str = None
+    # Texte après « INDEMNISES PAR : » (ex. « LA FEDERATION ») : qui paie les arbitres
+    payer: str = None
     refs: Dict[AbstractReferee, dict[str, int]] = field(default_factory=dict)
     unique_id: str = field(init=False)
 
@@ -34,6 +36,7 @@ class Game :
         self.away_team = data.get('away_team')
         self.competition_level = data.get('competition_level')
         self.venue = data.get('venue')
+        self.payer = data.get('payer')
         # Reconstruct refs dictionary from the list of dicts
         self.refs = {}
         for ref_data in data.get('refs', []):
@@ -55,6 +58,7 @@ class Game :
             'away_team': self.away_team,
             'competition_level': self.competition_level,
             'venue': self.venue,
+            'payer': self.payer,
             'refs': [{**ref.to_dict(), 'details': details} for ref, details in self.refs.items()],
             'otms': [otm.to_dict() for otm in self.otms],
             'unique_id': self.unique_id

@@ -1,6 +1,6 @@
 import unittest
 
-from fbi_api.utils.pdfExtractor import _extract_venue
+from fbi_api.utils.pdfExtractor import _extract_payer, _extract_venue
 
 
 class ExtractVenueTests(unittest.TestCase):
@@ -23,6 +23,31 @@ class ExtractVenueTests(unittest.TestCase):
 
     def test_nothing_found(self):
         self.assertIsNone(_extract_venue("pas d'adresse ici"))
+
+
+class ExtractPayerTests(unittest.TestCase):
+    def test_referee_line(self):
+        text = "B. GROUPEMENT SPORTIF VISITEUR : X\nC. Arbitre INDEMNISES PAR : LA FEDERATION\nArbitre : DUPONT Jean"
+        self.assertEqual(_extract_payer(text), "LA FEDERATION")
+
+    def test_referee_line_preferred_over_otm_line(self):
+        text = "C. OTM INDEMNISES PAR : LE CLUB RECEVANT\nC. Arbitre INDEMNISES PAR : LA LIGUE\n"
+        self.assertEqual(_extract_payer(text), "LA LIGUE")
+
+    def test_stops_at_glued_section(self):
+        text = "C. Arbitre INDEMNISES PAR : LE COMITE D. OFFICIELS DE TABLE\n"
+        self.assertEqual(_extract_payer(text), "LE COMITE")
+
+    def test_stops_at_glued_second_indemnises(self):
+        text = "C. Arbitre INDEMNISES PAR : LA FEDERATION OTM INDEMNISES PAR : LE CLUB\n"
+        self.assertEqual(_extract_payer(text), "LA FEDERATION")
+
+    def test_spacing_and_accents(self):
+        text = "Arbitres INDEMNISÉS PAR:LE CLUB RECEVANT\n"
+        self.assertEqual(_extract_payer(text), "LE CLUB RECEVANT")
+
+    def test_nothing_found(self):
+        self.assertIsNone(_extract_payer("pas de payeur ici"))
 
 
 if __name__ == "__main__":
